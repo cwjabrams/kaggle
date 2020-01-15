@@ -17,7 +17,7 @@ def buildModel(data):
         layers.Dense(1)
     ])
 
-    optimizer = tf.keras.optimizers.Nadam(learning_rate=0.001)
+    optimizer = tf.keras.optimizers.RMSprop(0.001)
 
     model.compile(loss='mse',
             optimizer=optimizer,
@@ -66,8 +66,8 @@ def main():
     
     results_list = list()
     
-    num_models = 10
-    num_epochs = 1000
+    num_models = 20 
+    num_epochs = 5000
 
     for i in range(num_models):
         model = buildModel(data)
@@ -77,18 +77,6 @@ def main():
         history = model.fit(train_data, train_labels,
                 epochs=num_epochs, validation_split=0.2, verbose=1, callbacks=[early_stopping])
 
-        print(history.history.keys())
-
-
-        '''
-        # Plot training & validation accuracy values
-        plt.plot(history.history['mse'])
-        plt.plot(history.history['val_mse'])
-        plt.title('Model accuracy')
-        plt.ylabel('Accuracy')
-        plt.xlabel('Epoch')
-        plt.legend(['Train', 'Test'], loc='upper left')
-        plt.show()
 
         # Plot training & validation loss values
         plt.plot(history.history['loss'])
@@ -97,8 +85,7 @@ def main():
         plt.ylabel('Loss')
         plt.xlabel('Epoch')
         plt.legend(['Train', 'Test'], loc='upper left')
-        plt.show()
-        '''
+        plt.savefig(fname='images/loss_' + str(i) + '.png')
 
         cleanData(test_data)
         results = model.predict(test_data)
@@ -109,6 +96,7 @@ def main():
     for i in range(len(results_arr)):
             for j in range(len(results_arr[i])):
                 results_arr[i,j] = results_list[j][i]
+    print(results_arr)
     
     final_results = np.zeros(len(test_data))
     for i in range(len(test_data)):
