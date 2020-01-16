@@ -12,16 +12,15 @@ from tensorflow.keras import regularizers
 
 def buildModel(data):
     model = keras.Sequential([
-        layers.Dense(44, input_shape=[len(data[0])]),
-        layers.Dense(44, activation='elu'),
-        layers.Dense(1, activation='relu'),
+        layers.Dense(44, input_shape=[len(data[0])], activation='elu'),
+        layers.Dense(1, input_shape=[45], activation='relu'),
     ])
 
     optimizer = tf.keras.optimizers.RMSprop(0.001)
 
     model.compile(loss='mse',
             optimizer=optimizer,
-            metrics=['mae', 'mse'])
+            metrics=['mae', 'mse', 'acc'])
 
     return model
 
@@ -33,7 +32,7 @@ def cleanData(data):
             if np.isnan(data[i,j]) or np.isinf(data[i,j]):
                 data[i, j] = np.nan_to_num(data[i,j]) 
     center(data)
-    scp.normalize(data, norm='l2',axis=0) 
+    scp.normalize(data, norm='l1',axis=1) 
 
 def center(data):
     mean_data_point = get_mean_data_point(data)
@@ -72,7 +71,7 @@ def main():
     results_list = list()
     
     num_models = 10 
-    num_epochs = 2000
+    num_epochs = 3000
 
     # Clean training data and test data
     train_data, train_labels = prepData(data, labels)
@@ -91,6 +90,17 @@ def main():
                 epochs=num_epochs, validation_split=0.2, verbose=1, callbacks=[early_stopping])
 
         # Plot training & validation loss values
+        plt.plot(history.history['acc'])
+        plt.plot(history.history['val_acc'])
+        plt.title('Model loss')
+        plt.ylabel('Loss')
+        plt.xlabel('Epoch')
+        plt.legend(['Train', 'Test'], loc='upper left')
+        plt.savefig(fname='images/acc_' + str(i) + '.png')
+        plt.clf()
+
+
+        # Plot training & validation loss values
         plt.plot(history.history['loss'])
         plt.plot(history.history['val_loss'])
         plt.title('Model loss')
@@ -98,6 +108,7 @@ def main():
         plt.xlabel('Epoch')
         plt.legend(['Train', 'Test'], loc='upper left')
         plt.savefig(fname='images/loss_' + str(i) + '.png')
+        plt.clf()
 
         results = model.predict(test_data)
         results_list.append(results)
