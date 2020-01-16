@@ -12,9 +12,9 @@ from tensorflow.keras import regularizers
 
 def buildModel(data):
     model = keras.Sequential([
-        layers.Dense(64, activation='relu', input_shape=[len(data[0])]),
-        layers.Dense(64, activation='relu'),
-        layers.Dense(1)
+        layers.Dense(44, input_shape=[len(data[0])]),
+        layers.Dense(44, activation='elu'),
+        layers.Dense(1, activation='relu'),
     ])
 
     optimizer = tf.keras.optimizers.RMSprop(0.001)
@@ -28,12 +28,12 @@ def buildModel(data):
 # Whatever we do to the training data we will need to do to
 # the validationa and test data.
 def cleanData(data):
-    center(data)
     for i in range(len(data)):
         for j in range(len(data[i])):
             if np.isnan(data[i,j]) or np.isinf(data[i,j]):
                 data[i, j] = np.nan_to_num(data[i,j]) 
-    scp.normalize(data, norm='l1',axis=1) 
+    center(data)
+    scp.normalize(data, norm='l2',axis=0) 
 
 def center(data):
     mean_data_point = get_mean_data_point(data)
@@ -52,6 +52,12 @@ def prepData(data, labels):
     cleanData(data)
     return data, labels
 
+def addOnes(data):
+    #Add column of all 1's to end of data matrix
+    n,m = data.shape
+    ones = np.ones((n,1))
+    data = np.hstack((data, ones))
+
 def main():
     data_file = open('data/data_points.npy', 'rb')
     labels_file = open('data/labels.npy', 'rb')
@@ -62,21 +68,27 @@ def main():
     test_data = np.load(test_data)
     test_id = np.load(test_id_file)
 
-    train_data, train_labels = prepData(data, labels)
     
     results_list = list()
     
-    num_models = 20 
-    num_epochs = 5000
+    num_models = 10 
+    num_epochs = 2000
+
+    # Clean training data and test data
+    train_data, train_labels = prepData(data, labels)
+    cleanData(test_data)
+    # Add a 1 to every training and test data point
+    addOnes(train_data)
+    addOnes(test_data)
 
     for i in range(num_models):
-        model = buildModel(data)
         
-        early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=250, verbose=1, restore_best_weights=True)
+        model = buildModel(train_data)
+        
+        early_stopping = keras.callbacks.EarlyStopping(monitor='val_mse', patience=400, verbose=1, restore_best_weights=True)
 
-        history = model.fit(train_data, train_labels,
+        history = model.fit(train_data, train_labels, shuffle=True,
                 epochs=num_epochs, validation_split=0.2, verbose=1, callbacks=[early_stopping])
-
 
         # Plot training & validation loss values
         plt.plot(history.history['loss'])
@@ -87,9 +99,10 @@ def main():
         plt.legend(['Train', 'Test'], loc='upper left')
         plt.savefig(fname='images/loss_' + str(i) + '.png')
 
-        cleanData(test_data)
         results = model.predict(test_data)
         results_list.append(results)
+
+        
 
     results_arr = np.zeros((len(test_data), num_models))
     print(results_arr)
