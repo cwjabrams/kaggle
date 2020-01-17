@@ -11,16 +11,21 @@ from tensorflow.keras import regularizers
 
 
 def buildModel(data):
+
+
+    initializer = keras.initializers.RandomNormal(mean=0.0, stddev=np.sqrt(1/len(data[0])), seed=None)
+
     model = keras.Sequential([
-        layers.Dense(44, input_shape=[len(data[0])], activation='elu'),
+        layers.Dense(44, input_shape=[len(data[0])], activation='elu', activity_regularizer=regularizers.l2(0.01),kernel_initializer=initializer),
         layers.Dense(1, input_shape=[45], activation='relu'),
     ])
 
-    optimizer = tf.keras.optimizers.RMSprop(0.001)
+    optimizer = tf.keras.optimizers.RMSprop(0.00085)
+    #optimizer = tf.keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 
     model.compile(loss='mse',
             optimizer=optimizer,
-            metrics=['mae', 'mse', 'acc'])
+            metrics=['mae', 'mse'])
 
     return model
 
@@ -70,8 +75,8 @@ def main():
     
     results_list = list()
     
-    num_models = 10 
-    num_epochs = 3000
+    num_models = 5 
+    num_epochs = 10000
 
     # Clean training data and test data
     train_data, train_labels = prepData(data, labels)
@@ -84,21 +89,10 @@ def main():
         
         model = buildModel(train_data)
         
-        early_stopping = keras.callbacks.EarlyStopping(monitor='val_mse', patience=400, verbose=1, restore_best_weights=True)
+        early_stopping = keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', patience=1200, verbose=1, restore_best_weights=True)
 
         history = model.fit(train_data, train_labels, shuffle=True,
                 epochs=num_epochs, validation_split=0.2, verbose=1, callbacks=[early_stopping])
-
-        # Plot training & validation loss values
-        plt.plot(history.history['acc'])
-        plt.plot(history.history['val_acc'])
-        plt.title('Model loss')
-        plt.ylabel('Loss')
-        plt.xlabel('Epoch')
-        plt.legend(['Train', 'Test'], loc='upper left')
-        plt.savefig(fname='images/acc_' + str(i) + '.png')
-        plt.clf()
-
 
         # Plot training & validation loss values
         plt.plot(history.history['loss'])
