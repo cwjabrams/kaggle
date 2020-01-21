@@ -37,12 +37,13 @@ def prepData(data, labels):
     cleanData(data)
     return data, labels
 
-def makeContinuous(dataframe, col_name):
+def makeContinuous(dataframe, col_name, scalar=1):
     column = dataframe[col_name].to_numpy()
     min_val = np.amin(column)
     max_val = np.amax(column)
-    dataframe[col_name] = dataframe[col_name].apply(lambda x: np.absolute((x-min_val)/(max_val-min_val)))
+    dataframe[col_name] = dataframe[col_name].apply(lambda x: scalar * np.absolute((x-min_val)/(max_val-min_val)))
     
+
 
 # METHODS END =========================================================================
 
@@ -56,10 +57,18 @@ print(test_df)
 combined = pd.concat([train_df,test_df],axis=0, ignore_index=True)
 print(combined)
 
+continuous_cols = list()
+continuous_cols.append("yrsold")
+continuous_cols.append("grlivarea")
+continuous_cols.append("1stflrsf")
+continuous_cols.append("masvnrarea")
+continuous_cols.append("garageyrblt")
+continuous_cols.append("lotarea")
+
 categoryCode(combined)
 for col_name in combined.columns:
-    if "year" in col_name.lower():
-        makeContinuous(combined, col_name)
+    if col_name.lower() in continuous_cols or "year" in col_name.lower():
+        makeContinuous(combined, col_name, 10)
 
 print(combined)
 
