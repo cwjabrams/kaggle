@@ -8,24 +8,28 @@ import pickle
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
+from keras import backend as K
 
+def root_mean_squared_error(y_true, y_pred):
+        return K.sqrt(K.mean(K.square(K.log(y_pred) - K.log(y_true)))) 
 
 def buildModel(data):
 
-
     initializer = keras.initializers.RandomNormal(mean=0.0, stddev=np.sqrt(1/len(data[0])), seed=None)
 
+    output_layer1_size = int((2/3)*len(data[0]))
+
     model = keras.Sequential([
-        layers.Dense(44, input_shape=[len(data[0])], activation='elu', activity_regularizer=regularizers.l2(0.01),kernel_initializer=initializer),
-        layers.Dense(1, input_shape=[45], activation='relu'),
+        layers.Dense(output_layer1_size, input_shape=[len(data[0])], activation='elu', activity_regularizer=regularizers.l2(0.01),kernel_initializer=initializer),
+        layers.Dense(1, input_shape=[output_layer1_size+1], activation='relu'),
     ])
 
-    optimizer = tf.keras.optimizers.RMSprop(0.00085)
+    optimizer = tf.keras.optimizers.RMSprop(0.009)
     #optimizer = tf.keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 
-    model.compile(loss='mse',
+    model.compile(loss=root_mean_squared_error,
             optimizer=optimizer,
-            metrics=['mae', 'mse'])
+            metrics=['mse', 'mae'])
 
     return model
 
@@ -63,9 +67,9 @@ def addOnes(data):
     data = np.hstack((data, ones))
 
 def main():
-    data_file = open('data/data_points.npy', 'rb')
+    data_file = open('data/train_coded_combined.npy', 'rb')
     labels_file = open('data/labels.npy', 'rb')
-    test_data = open('data/test_data.npy', 'rb')
+    test_data = open('data/test_coded_combined.npy', 'rb')
     test_id_file = open('data/test_data_id.npy', 'rb')
     data = np.load(data_file)
     labels = np.load(labels_file)
@@ -75,8 +79,8 @@ def main():
     
     results_list = list()
     
-    num_models = 5 
-    num_epochs = 10000
+    num_models = 1
+    num_epochs = 5000
 
     # Clean training data and test data
     train_data, train_labels = prepData(data, labels)
@@ -89,7 +93,7 @@ def main():
         
         model = buildModel(train_data)
         
-        early_stopping = keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', patience=1200, verbose=1, restore_best_weights=True)
+        early_stopping = keras.callbacks.EarlyStopping(monitor='mse', patience=1000, verbose=1, restore_best_weights=True)
 
         history = model.fit(train_data, train_labels, shuffle=True,
                 epochs=num_epochs, validation_split=0.2, verbose=1, callbacks=[early_stopping])
