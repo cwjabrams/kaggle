@@ -64,8 +64,8 @@ print(combined)
 
 combined['MasVnrArea'] = combined['MasVnrArea'].apply(lambda x: 1 if x > 0 else 0)
 
-avg_year_built = int(combined['YearBuilt'].mean())
-combined['YearBuilt'] = combined['YearBuilt'].apply(lambda x: avg_year_built if x > avg_year_built else x)
+cutoff_year = int((combined['YearBuilt'].mean() + combined['YearBuilt'].max())/2)
+combined['YearBuilt'] = combined['YearBuilt'].apply(lambda x: cutoff_year if x > cutoff_year else x)
 
 avg_year_remodled = int(combined['YearRemodAdd'].mean())
 combined['YearRemodAdd'] = combined['YearRemodAdd'].apply(lambda x: avg_year_remodled if x > avg_year_remodled else x)
@@ -75,7 +75,6 @@ categoryCodeSingle(combined, 'YrSold')
 categoryCode(combined)
 
 continuous_cols = list()
-continuous_cols.append('GarageYrBlt')
 continuous_cols.append('1stFlrSF')
 
 for col_name in combined.columns:
