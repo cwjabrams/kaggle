@@ -6,8 +6,12 @@ import numpy as np
 def categoryCode(dataframe):
     for col_name in dataframe.columns:
         if dataframe[col_name].dtype == 'object':
-            dataframe[col_name] = dataframe[col_name].astype('category')
-            dataframe[col_name] = dataframe[col_name].cat.codes
+            categoryCodeSingle(dataframe, col_name)
+
+def categoryCodeSingle(dataframe, col_name):
+    dataframe[col_name] = dataframe[col_name].astype('category')
+    dataframe[col_name] = dataframe[col_name].cat.codes
+
 
 def cleanData(data):
     center(data)
@@ -15,10 +19,10 @@ def cleanData(data):
         for j in range(len(data[i])):
             if np.isnan(data[i,j]) or np.isinf(data[i,j]):
                 data[i, j] = np.nan_to_num(data[i,j]) 
-    scp.normalize(data, norm='l1',axis=1) 
+    scp.normalize(data, norm='l2',axis=0) 
 
-def normalize(data, norm, axis):
-    scp.normalize(data, norm=norm,axis=1) 
+def normalize(data, norm, axis=0):
+    scp.normalize(data, norm=norm,axis=axis) 
 
 def center(data):
     mean_data_point = get_mean_data_point(data)
@@ -42,7 +46,7 @@ def makeContinuous(dataframe, col_name, scalar=1):
     min_val = np.amin(column)
     max_val = np.amax(column)
     dataframe[col_name] = dataframe[col_name].apply(lambda x: scalar * np.absolute((x-min_val)/(max_val-min_val)))
-    
+
 
 
 # METHODS END =========================================================================
@@ -58,17 +62,27 @@ combined = pd.concat([train_df,test_df],axis=0, ignore_index=True)
 print(combined)
 
 continuous_cols = list()
-continuous_cols.append("yrsold")
 continuous_cols.append("grlivarea")
 continuous_cols.append("1stflrsf")
 continuous_cols.append("masvnrarea")
-continuous_cols.append("garageyrblt")
 continuous_cols.append("lotarea")
+continuous_cols.append("yrsold")
 
+avg_year_built = int(combined['YearBuilt'].mean())
+combined['YearBuilt'] = combined['YearBuilt'].apply(lambda x: avg_year_built if x > avg_year_built else x)
+
+avg_year_remodled = int(combined['YearRemodAdd'].mean())
+combined['YearRemodAdd'] = combined['YearRemodAdd'].apply(lambda x: avg_year_remodled if x > avg_year_remodled else x)
+
+avg_year_garage_blt = int(combined['GarageYrBlt'].mean())
+combined['GarageYrBlt'] = combined['GarageYrBlt'].apply(lambda x: avg_year_garage_blt if x > avg_year_garage_blt else x)
+
+combined = combined.drop(['PoolQC'], axis=1)
+categoryCodeSingle(combined, 'MSSubClass')
 categoryCode(combined)
 for col_name in combined.columns:
-    if col_name.lower() in continuous_cols or "year" in col_name.lower():
-        makeContinuous(combined, col_name, 10)
+    if col_name.lower() in continuous_cols:
+        makeContinuous(combined, col_name)
 
 print(combined)
 
