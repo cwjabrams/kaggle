@@ -62,10 +62,13 @@ combined = pd.concat([train_df,test_df],axis=0, ignore_index=True)
 print(combined)
 
 
+lotFrontageAvg = combined['LotFrontage'].mean()
+combined['LotFrontage'] = combined['LotFrontage'].fillna(lotFrontageAvg) 
+
 combined['MasVnrArea'] = combined['MasVnrArea'].apply(lambda x: 1 if x > 0 else 0)
 
-cutoff_year = int((combined['YearBuilt'].mean() + combined['YearBuilt'].max())/2)
-combined['YearBuilt'] = combined['YearBuilt'].apply(lambda x: cutoff_year if x > cutoff_year else x)
+cutoff_year = 1989
+combined['YearBuilt'] = combined['YearBuilt'].apply(lambda x: 1 if x > cutoff_year else 0)
 
 avg_year_remodled = int(combined['YearRemodAdd'].mean())
 combined['YearRemodAdd'] = combined['YearRemodAdd'].apply(lambda x: avg_year_remodled if x > avg_year_remodled else x)
@@ -74,12 +77,17 @@ categoryCodeSingle(combined, 'MSSubClass')
 categoryCodeSingle(combined, 'YrSold')
 categoryCode(combined)
 
+combined['EnclosedPorch'] = combined['EnclosedPorch'].clip(0, 2) 
+combined['3SsnPorch'] = combined['3SsnPorch'].clip(0, 2) 
+combined['ScreenPorch'] = combined['ScreenPorch'].clip(0, 2) 
+
 continuous_cols = list()
-continuous_cols.append('1stFlrSF')
+continuous_cols.append('OverallQual')
+continuous_cols.append('OverallCond')
 
 for col_name in combined.columns:
     if col_name.lower() in continuous_cols:
-        makeContinuous(combined, col_name)
+        makeContinuous(combined, col_name, 10)
 
 
 print(combined)
