@@ -8,10 +8,16 @@ import pickle
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras import regularizers
-from keras import backend as K
+from tensorflow.keras import backend as K
 
 def root_mean_squared_error(y_true, y_pred):
         return K.sqrt(K.mean(K.square(K.log(y_pred) - K.log(y_true)))) 
+
+def rmse(y_true, y_pred):
+        return K.sqrt(K.mean(K.square(K.log(y_pred) - K.log(y_true)))) 
+
+def relu_mod(X):
+    return K.clip(X, 0.0000000001, K.max(X))
 
 def buildModel(data):
 
@@ -20,16 +26,18 @@ def buildModel(data):
     output_layer1_size = int((2/3)*len(data[0]))
 
     model = keras.Sequential([
-        layers.Dense(output_layer1_size, input_shape=[len(data[0])], activation='elu', activity_regularizer=regularizers.l2(0.01),kernel_initializer=initializer),
-        layers.Dense(1, input_shape=[output_layer1_size+1], activation='relu'),
+        layers.Dense(output_layer1_size, input_shape=[len(data[0])], activation='elu',
+            activity_regularizer=regularizers.l2(0.01),kernel_initializer=initializer),
+        layers.Dropout(0.1),
+        layers.Dense(1, input_shape=[output_layer1_size+1], activation=relu_mod),
     ])
 
-    optimizer = tf.keras.optimizers.RMSprop(0.009)
+    optimizer = tf.keras.optimizers.RMSprop(0.0085)
     #optimizer = tf.keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 
-    model.compile(loss=root_mean_squared_error,
+    model.compile(loss='mean_squared_error',
             optimizer=optimizer,
-            metrics=['mse', 'mae'])
+            metrics=[rmse, 'mae'])
 
     return model
 
@@ -79,8 +87,8 @@ def main():
     
     results_list = list()
     
-    num_models = 1
-    num_epochs = 5000
+    num_models = 5
+    num_epochs = 3000
 
     # Clean training data and test data
     train_data, train_labels = prepData(data, labels)
@@ -93,14 +101,14 @@ def main():
         
         model = buildModel(train_data)
         
-        early_stopping = keras.callbacks.EarlyStopping(monitor='mse', patience=1000, verbose=1, restore_best_weights=True)
+        early_stopping = keras.callbacks.EarlyStopping(monitor='val_rmse', patience=2000, verbose=1, restore_best_weights=True)
 
         history = model.fit(train_data, train_labels, shuffle=True,
                 epochs=num_epochs, validation_split=0.2, verbose=1, callbacks=[early_stopping])
 
         # Plot training & validation loss values
-        plt.plot(history.history['loss'])
-        plt.plot(history.history['val_loss'])
+        plt.plot(history.history['rmse'])
+        plt.plot(history.history['val_rmse'])
         plt.title('Model loss')
         plt.ylabel('Loss')
         plt.xlabel('Epoch')
