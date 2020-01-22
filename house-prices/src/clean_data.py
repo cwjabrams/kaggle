@@ -61,12 +61,8 @@ print(test_df)
 combined = pd.concat([train_df,test_df],axis=0, ignore_index=True)
 print(combined)
 
-continuous_cols = list()
-continuous_cols.append("grlivarea")
-continuous_cols.append("1stflrsf")
-continuous_cols.append("masvnrarea")
-continuous_cols.append("lotarea")
-continuous_cols.append("yrsold")
+
+combined['MasVnrArea'] = combined['MasVnrArea'].apply(lambda x: 1 if x > 0 else 0)
 
 avg_year_built = int(combined['YearBuilt'].mean())
 combined['YearBuilt'] = combined['YearBuilt'].apply(lambda x: avg_year_built if x > avg_year_built else x)
@@ -74,15 +70,18 @@ combined['YearBuilt'] = combined['YearBuilt'].apply(lambda x: avg_year_built if 
 avg_year_remodled = int(combined['YearRemodAdd'].mean())
 combined['YearRemodAdd'] = combined['YearRemodAdd'].apply(lambda x: avg_year_remodled if x > avg_year_remodled else x)
 
-avg_year_garage_blt = int(combined['GarageYrBlt'].mean())
-combined['GarageYrBlt'] = combined['GarageYrBlt'].apply(lambda x: avg_year_garage_blt if x > avg_year_garage_blt else x)
-
-combined = combined.drop(['PoolQC'], axis=1)
 categoryCodeSingle(combined, 'MSSubClass')
+categoryCodeSingle(combined, 'YrSold')
 categoryCode(combined)
+
+continuous_cols = list()
+continuous_cols.append('GarageYrBlt')
+continuous_cols.append('1stFlrSF')
+
 for col_name in combined.columns:
     if col_name.lower() in continuous_cols:
         makeContinuous(combined, col_name)
+
 
 print(combined)
 
