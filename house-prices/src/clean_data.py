@@ -65,6 +65,9 @@ print(combined)
 lotFrontageAvg = combined['LotFrontage'].mean()
 combined['LotFrontage'] = combined['LotFrontage'].fillna(lotFrontageAvg) 
 
+garageYrBltAvg = int(combined['GarageYrBlt'].mean())
+combined['GarageYrBlt'] = combined['GarageYrBlt'].fillna(garageYrBltAvg) 
+
 combined['MasVnrArea'] = combined['MasVnrArea'].apply(lambda x: 1 if x > 0 else 0)
 
 cutoff_year = 1989
