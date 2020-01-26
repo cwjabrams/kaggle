@@ -17,7 +17,7 @@ def rmse(y_true, y_pred):
         return K.sqrt(K.mean(K.square(K.log(y_pred) - K.log(y_true)))) 
 
 def relu_mod(X):
-    return K.clip(X, 0.0000000001, K.max(X))
+    return K.clip(X, 0.00001, K.max(X))
 
 def buildModel(data):
 
@@ -26,10 +26,10 @@ def buildModel(data):
     output_layer1_size = int((2/3)*len(data[0]))
 
     model = keras.Sequential([
-        layers.Dense(output_layer1_size, input_shape=[len(data[0])], activation='elu',
+        layers.Dense(output_layer1_size, input_shape=[len(data[0])], activation='selu',
             activity_regularizer=regularizers.l2(0.01),kernel_initializer=initializer),
-        layers.Dropout(0.1),
-        layers.Dense(1, input_shape=[output_layer1_size+1], activation=relu_mod),
+        layers.Dropout(0.05),
+        layers.Dense(1, input_shape=[output_layer1_size+1], activation='relu'),
     ])
 
     optimizer = tf.keras.optimizers.RMSprop(0.0085)
@@ -87,7 +87,7 @@ def main():
     
     results_list = list()
     
-    num_models = 5
+    num_models = 1
     num_epochs = 3000
 
     # Clean training data and test data
