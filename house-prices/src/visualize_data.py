@@ -11,7 +11,7 @@ def plot_avg_price_by_numeric(dataframe, col_name):
 	y_values = [x[1] for x in zipped_sorted]	
 
 	fig, axis = plt.subplots()
-	axis.bar(x_values, y_values)
+	axis.plot(x_values, y_values, 'bo', markersize=1)
 	fig.suptitle(col_name + " vs Sales Price")
 	plt.savefig('images/data_price_graphs/' + col_name + '.png')
 	plt.close()
