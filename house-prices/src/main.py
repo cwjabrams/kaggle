@@ -10,14 +10,19 @@ from tensorflow.keras import layers
 from tensorflow.keras import regularizers
 from tensorflow.keras import backend as K
 
+@tf.function
 def root_mean_squared_error(y_true, y_pred):
         return K.sqrt(K.mean(K.square(K.log(y_pred) - K.log(y_true)))) 
 
 def rmse(y_true, y_pred):
         return K.sqrt(K.mean(K.square(K.log(y_pred) - K.log(y_true)))) 
 
+@tf.function
 def relu_mod(X):
     return K.clip(X, 0.00001, K.max(X))
+
+def relu_shift(X):
+	return K.relu(X) + 0.00001
 
 def buildModel(data):
 
@@ -49,7 +54,7 @@ def cleanData(data):
             if np.isnan(data[i,j]) or np.isinf(data[i,j]):
                 data[i, j] = np.nan_to_num(data[i,j]) 
     center(data)
-    scp.normalize(data, norm='l1',axis=1) 
+    scp.normalize(data, norm='l2',axis=0) 
 
 def center(data):
     mean_data_point = get_mean_data_point(data)
@@ -88,7 +93,7 @@ def main():
     results_list = list()
     
     num_models = 1
-    num_epochs = 3000
+    num_epochs = 5000
 
     # Clean training data and test data
     train_data, train_labels = prepData(data, labels)
