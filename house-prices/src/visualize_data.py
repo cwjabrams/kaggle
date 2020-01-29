@@ -20,21 +20,27 @@ def plot_avg_price_by_numeric(dataframe, col_name):
 def plot_avg_price_by_category(dataframe, col_name):
 	plot_avg_by_category(dataframe, col_name, 'SalePrice')
 
-def plot_avg_by_category(dataframe, cat_col_name, value_col_name):
-	categories = dataframe[cat_col_name].astype(str)		 
-	categories_set = categories.unique()
-	values_arr = dataframe[value_col_name].to_numpy()
-	
-	avg_values = list()
-	for category in categories_set:
-		avg = get_avg_value(category, categories, values_arr)
-		avg_values.append(avg)
-
-	fig, axis = plt.subplots()
-	axis.bar(list(categories_set), avg_values)
-	fig.suptitle(cat_col_name + " vs Sales Price")
-	plt.savefig('images/data_price_graphs/' + cat_col_name + '.png')
-	plt.close()
+    categories = list(dataframe[cat_col_name].astype(str))
+    category_set = list(set(categories))
+    prices = list(dataframe[value_col_name])
+    catStats = dict()
+    for category in category_set:
+            catPrices = list()
+            for i in range(len(categories)):
+                if categories[i]==category:
+                    catPrices.append(prices[i])
+            catPrices = np.asarray(catPrices)
+            average = np.mean(catPrices)
+            sd = np.std(catPrices)
+            catStats[category] = (average, sd)
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    plt.rc('font', size=8) 
+    ax1.bar(category_set, [catStats[x][0] for x in category_set], align='edge', width=0.3)
+    ax2.bar(category_set, [catStats[x][1] for x in category_set], align='edge', width=0.3)
+    fig.suptitle(cat_col_name + " vs Sales Price")
+    fig.tight_layout(pad=3.0)
+    plt.savefig('images/data_price_graphs/' + cat_col_name + '.png')
+    plt.close()
 
 def get_avg_value(category, categories, values_arr):
 	avg = 0
