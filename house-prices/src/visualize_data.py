@@ -3,16 +3,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def plot_avg_price_by_numeric(dataframe, col_name):
-	x_values = list(dataframe[col_name])	
+	corr_coef = pd.concat([dataframe[col_name], dataframe['SalePrice']], axis=1).corr(method='spearman').to_numpy()[0,1]
+	x_values = list(dataframe[col_name])
 	y_values = list(dataframe['SalePrice'])
 	zipped = list(zip(x_values, y_values))
 	zipped_sorted = sorted(zipped, key = lambda x: x[0])
-	x_values = [x[0] for x in zipped_sorted]	
-	y_values = [x[1] for x in zipped_sorted]	
+	x_values = [x[0] for x in zipped_sorted]
+	y_values = [x[1] for x in zipped_sorted]
 
 	fig, axis = plt.subplots()
 	axis.plot(x_values, y_values, 'bo', markersize=1)
-	fig.suptitle(col_name + " vs Sales Price")
+	fig.suptitle(col_name + " vs Sales Price r=" + str(corr_coef))
 	plt.savefig('images/data_price_graphs/' + col_name + '.png')
 	plt.close()
 
