@@ -37,7 +37,7 @@ def buildModel(data):
         layers.Dense(1, input_shape=[output_layer1_size+1], activation='relu'),
     ])
 
-    optimizer = tf.keras.optimizers.RMSprop(0.0085)
+    optimizer = tf.keras.optimizers.RMSprop(0.0084)
     #optimizer = tf.keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 
     model.compile(loss='mean_squared_error',
@@ -84,16 +84,15 @@ def main():
     labels_file = open('data/labels.npy', 'rb')
     test_data = open('data/test_coded_combined.npy', 'rb')
     test_id_file = open('data/test_data_id.npy', 'rb')
-    data = np.load(data_file)
-    labels = np.load(labels_file)
-    test_data = np.load(test_data)
-    test_id = np.load(test_id_file)
+    data = np.load(data_file, allow_pickle=True)
+    labels = np.load(labels_file, allow_pickle=True)
+    test_data = np.load(test_data, allow_pickle=True)
+    test_id = np.load(test_id_file, allow_pickle=True)
 
-    
     results_list = list()
     
     num_models = 1
-    num_epochs = 5000
+    num_epochs = 1000
 
     # Clean training data and test data
     train_data, train_labels = prepData(data, labels)
